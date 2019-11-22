@@ -1,12 +1,6 @@
 import React, { Component } from 'react';
 
 import styles from './Controls.module.css';
-import notyfy from '../../services/notify';
-
-const typeOfOperation = {
-    DEPOSIT: 'Deposit',
-    WITHDROWAL: 'Withdrawal',
-};
 
 class Controls extends Component {
     state = {
@@ -19,28 +13,18 @@ class Controls extends Component {
         });
     };
 
-    validInput = (e) => {
+    handleClickDeposit = e => {
         e.preventDefault();
+        this.props.onDeposit(this.state.amount, 'Deposit');
         this.setState({ amount: '' });
-
-        if (this.state.amount <= 0) {
-            notyfy.enterCorrectAmount();
-            return;
-        }
-
-        if ((this.state.amount > this.props.onBalance) && (e.currentTarget.name === 'Withdraw')) {
-            notyfy.notEnoughAmount();
-            return;
-        }
-
-        if (e.currentTarget.name === 'Deposit') {
-            this.props.onDeposit(this.state.amount, typeOfOperation.DEPOSIT);
-            return;
-        }
-
-        this.props.onWithdraw(this.state.amount, typeOfOperation.WITHDROWAL);
     };
 
+    handleClickWithdraw = e => {
+        e.preventDefault();
+
+        this.props.onWithdraw(this.state.amount, 'Withdrawal');
+        this.setState({ amount: '' });
+    };
 
     render() {
         const { amount } = this.state;
@@ -55,17 +39,15 @@ class Controls extends Component {
                 />
                 <button
                     type="button"
-                    name="Deposit"
                     className={styles.controls__button}
-                    onClick={this.validInput}
+                    onClick={this.handleClickDeposit}
                 >
                     Deposit
                 </button>
                 <button
                     type="button"
-                    name="Withdraw"
                     className={styles.controls__button}
-                    onClick={this.validInput}
+                    onClick={this.handleClickWithdraw}
                 >
                     Withdraw
                 </button>

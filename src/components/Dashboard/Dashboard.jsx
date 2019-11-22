@@ -3,21 +3,9 @@ import shortid from 'shortid';
 
 import styles from './Dashboard.module.css';
 
-import notyfy from '../../services/notify';
-
 import Controls from '../Controls'
 import Balance from '../Balance'
 import TransactionHistory from '../TransactionHistory'
-
-const typeOfOperation = {
-    DEPOSITE: 'Deposite',
-    WITHDROWAL: 'Withdrawal',
-};
-
-const sumOfOperations = {
-    income: 0,
-    expenses: 0,
-}
 
 class Dashboard extends Component {
 
@@ -26,7 +14,7 @@ class Dashboard extends Component {
         balance: 0,
     };
 
-    saveTransaction = (amount, type) => {
+    createTransaction = (amount, type) => {
 
         const transaction = {
             id: shortid.generate(),
@@ -35,48 +23,33 @@ class Dashboard extends Component {
             date: new Date().toLocaleString(),
         };
 
-        if (amount > 0) {
-            this.setState(state => ({
-                transactions: [...state.transactions, transaction],
-            }));
-        } else {
-            notyfy.enterCorrectAmount();
-        }
+        this.setState(state => ({
+            transactions: [...state.transactions, transaction],
+            balance: transaction.type === 'Deposit' ? state.balance + amount : state.balance - amount,
+        }));
     };
 
-    depositTransaction = amount => {
-        this.saveTransaction(amount, typeOfOperation.DEPOSITE);
-        if (amount > 0) {
-            this.setState(state => ({
-                balance: state.balance + amount
-            }));
-            sumOfOperations.income += amount;
-        };
-    };
-
-    withdrawTransaction = amount => {
-        if ((amount > 0) && (amount <= this.state.balance)) {
-            this.setState(state => ({
-                balance: state.balance - amount
-            }));
-            this.saveTransaction(amount, typeOfOperation.WITHDROWAL);
-            sumOfOperations.expenses += amount;
-
-        } else if (amount <= 0) {
-            notyfy.enterCorrectAmount();
-        }
-        else {
-            notyfy.notEnoughAmount();
-        }
-    };
+    transactionAmount = (type) => {
+        return this.state.transactions
+            .filter(transaction => transaction.type === type)
+            .reduce((sum, transaction) => sum += transaction.amount, 0);
+    }
 
     render() {
         const { balance, transactions } = this.state;
-        const { income, expenses } = sumOfOperations;
+
         return (
             < div className={styles.dashboard} >
-                <Controls onDeposit={this.depositTransaction} onWithdraw={this.withdrawTransaction} />
-                <Balance income={income} expenses={expenses} balance={balance} />
+                <Controls
+                    onDeposit={this.createTransaction}
+                    onWithdraw={this.createTransaction}
+                    onBalance={balance}
+                />
+                <Balance
+                    income={this.transactionAmount('Deposit')}
+                    expenses={this.transactionAmount('Withdrawal')}
+                    balance={balance}
+                />
                 <TransactionHistory items={transactions} />
             </div >
         )
